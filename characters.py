@@ -13,6 +13,9 @@ class BaseCharacter:
         }
         self.blocks = set()
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}(name='{self.name}')"
+
     def __str__(self):
         title = self.__class__.__name__ if self.revealed else "Influence"
         if self.name is None:

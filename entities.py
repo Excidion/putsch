@@ -4,16 +4,19 @@ from utils import get_player_decision_Reveal
 
 
 class Player:
-    def __init__(self, name=None, initial_coins=2):
+    def __init__(self, name=None, coins=2, influences=None):
         self.name = name
-        self.influences = []
-        self.coins = initial_coins
+        self.influences = influences if isinstance(influences, list) else []
+        self.coins = coins
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(name='{self.name}', coins={self.coins}, influences={self.influences})"
 
     def __str__(self):
         if self.name is None:
-            return "An anonymous player"
+            return f"An anonymous {self.__class__.__name__}"
         else:
-            return f"Player {self.name}"
+            return f"{self.__class__.__name__} {self.name}"
 
     def is_alive(self):
         return not all(i.revealed for i in self.influences)
