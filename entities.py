@@ -1,6 +1,7 @@
 from random import shuffle
 from characters import Ambassador, Assassin, Captain, Contessa, Duke
 from utils import get_player_decision_Reveal
+import logging
 
 
 class Player:
@@ -38,12 +39,12 @@ class Player:
 
     def lose_influence(self):
         assert self.is_alive(), f"{self} has no influences left."
-        print(f"{self} loses 1 influence.")
+        logging.info(f"{self} loses 1 influence.")
         character = get_player_decision_Reveal(self.get_unrevealed_influences())
         i = self.influences.index(character)
         self.influences[i].reveal()
         if not self.is_alive():
-            print(f"{self} is out of the game.")
+            logging.info(f"{self} is out of the game.")
 
     def get_unrevealed_influences(self):
         return [i for i in self.influences if not i.revealed]

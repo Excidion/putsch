@@ -1,4 +1,5 @@
 from utils import get_player_decision_Exchange
+import logging
 
 # define base classes
 class BaseAction:
@@ -14,10 +15,10 @@ class BaseAction:
         return self.__class__.__name__
 
     def announce(self):
-        print(f"{self.executing_player} wants to execute {self}.")
+        logging.info(f"{self.executing_player} wants to execute {self}.")
 
     def announce_execute(self):
-        print(f"{self.executing_player} executed {self}.")
+        logging.info(f"{self.executing_player} executed {self}.")
 
 
 class InterAction(BaseAction):
@@ -26,21 +27,25 @@ class InterAction(BaseAction):
         super().__init__(*args, **kwargs)
 
     def announce(self):
-        print(
+        logging.info(
             f"{self.executing_player} wants to execute {self} on {self.affected_player}."
         )
 
     def announce_execute(self):
-        print(f"{self.executing_player} executed {self} on {self.affected_player}.")
+        logging.info(
+            f"{self.executing_player} executed {self} on {self.affected_player}."
+        )
 
 
 class CharacterAction(BaseAction):
     def challenge(self, challenging_player):
         self.challenging_player = challenging_player
-        print(f"{self.challenging_player} challenges {self.executing_player}'s {self}.")
+        logging.info(
+            f"{self.challenging_player} challenges {self.executing_player}'s {self}."
+        )
         character = self.executing_player.challenge(self)
         if character is not None:
-            print(f"{self.executing_player}'s {self} was not a bluff.")
+            logging.info(f"{self.executing_player}'s {self} was not a bluff.")
             character.reveal()
             self.executing_player.remove_card(character)
             self.deck.put_back(character)
@@ -48,7 +53,7 @@ class CharacterAction(BaseAction):
             self.challenging_player.lose_influence()
             return False
         else:
-            print(f"{self.executing_player}'s {self} was a bluff.")
+            logging.info(f"{self.executing_player}'s {self} was a bluff.")
             self.executing_player.lose_influence()
             return True
 
@@ -57,23 +62,23 @@ class BlockableAction(BaseAction):
     def block(self, blocking_player):
         self.blocking_player = blocking_player
         if isinstance(self, InterAction):
-            print(
+            logging.info(
                 f"{self.blocking_player} blocks {self.executing_player}'s attempt at {self} on {self.affected_player}."
             )
 
         else:
-            print(
+            logging.info(
                 f"{self.blocking_player} blocks {self.executing_player}'s attempt at {self}."
             )
 
     def challenge_block(self, block_challenging_player):
         self.block_challenging_player = block_challenging_player
-        print(
+        logging.info(
             f"{self.block_challenging_player} challenges {self.blocking_player}'s block."
         )
         character = self.blocking_player.challenge(self, block=True)
         if character is not None:
-            print(f"{self.blocking_player}'s block was not a bluff.")
+            logging.info(f"{self.blocking_player}'s block was not a bluff.")
             character.reveal()
             self.blocking_player.remove_card(character)
             self.deck.put_back(character)
@@ -81,7 +86,7 @@ class BlockableAction(BaseAction):
             self.block_challenging_player.lose_influence()
             return False
         else:
-            print(f"{self.blocking_player}'s block was a bluff.")
+            logging.info(f"{self.blocking_player}'s block was a bluff.")
             self.blocking_player.lose_influence()
             return True
 
@@ -121,7 +126,7 @@ class Assassinate(InterAction, BlockableAction, CharacterAction):
             self.announce_execute()
             self.affected_player.lose_influence()
         except AssertionError:  # If the action was unsuccessfully challenged, the affected_player might have no influences left at the time of execution.
-            print(
+            logging.warning(
                 f"{self.executing_player}'s {self} could not be executed, since {self.affected_player} is already out of the game."
             )
 

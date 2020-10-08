@@ -8,6 +8,14 @@ from utils import (
     get_blocker,
     get_block_challenger,
 )
+import logging
+
+logging.basicConfig(
+    filename="events.log",
+    level=logging.DEBUG,
+    format=r"%(asctime)s, %(levelname)s, %(message)s",
+    filemode="w",
+)
 
 
 def main(list_of_player_names):
@@ -20,9 +28,7 @@ def main(list_of_player_names):
         for player in players:
             if not player.is_alive():
                 continue
-
-            elif len(get_alive_players(players)) == 1:
-                print(f"{get_alive_players(players)[0]} wins!")
+            elif win_condition_met(players):
                 return
 
             action_type = get_player_decision_Action(actions, player)
@@ -47,6 +53,9 @@ def main(list_of_player_names):
                 if challenger is not None:
                     if action.challenge(challenging_player=challenger):
                         continue  # challenge succeeded, turn ends
+
+            if win_condition_met(players):
+                return  # last competitor might drop out after lost challenge
 
             # eventual block of the action
             if isinstance(action, BlockableAction):
@@ -84,6 +93,15 @@ def setup_game(list_of_player_names, multiplicity=3, initial_influences=2):
 
 def get_alive_players(players):
     return [p for p in players if p.is_alive()]
+
+
+def win_condition_met(players):
+    alive_players = get_alive_players(players)
+    if len(alive_players) == 1:
+        logging.info(f"{alive_players[0]} wins!")
+        return True
+    else:
+        return False
 
 
 if __name__ == "__main__":

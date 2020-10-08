@@ -1,5 +1,6 @@
 from actions import Income, ForeignAid, Tax, Coup, Assassinate, Steal, Exchange
 from utils import RandomNameGenerator
+import logging
 
 
 class BaseCharacter:
@@ -26,7 +27,7 @@ class BaseCharacter:
     def reveal(self):
         assert self.revealed == False, f"{self} is already revealed."
         self.revealed = True
-        print(f"{self} was revealed.")
+        logging.info(f"{self} was revealed.")
         return type(self)
 
 
