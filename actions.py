@@ -1,4 +1,3 @@
-from utils import get_player_decision_Exchange
 import logging
 
 # define base classes
@@ -151,7 +150,9 @@ class Exchange(CharacterAction):
         original = self.executing_player.get_unrevealed_influences()
         drawn = self.deck.draw(2)
         options = original + drawn
-        choices = get_player_decision_Exchange(options, len(original))
+        choices = self.executing_player.controller.choose_exchange(
+            options, len(original)
+        )
         drops = set(original) - set(choices)
         gains = set(choices) - set(original)
         assert len(drops) == len(gains), f"Can't trade {len(drops)} for {len(gains)}."

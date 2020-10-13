@@ -1,36 +1,38 @@
-from random import choice, sample, getrandbits, shuffle
-from itertools import product
+from random import choice, getrandbits, shuffle
+from uuid import uuid4
 
 
-def get_player_decision_Action(actions, executing_player):
-    available_actions = [a for a in actions if a.cost <= executing_player.coins]
-    return choice(available_actions)
+def get_blocker(action, alive_players):
+    blocker = choose_player_excluding(alive_players, action.executing_player)
+    if blocker.controller.decide_challenge(action):
+        return blocker
+    else:
+        return None
 
 
-def get_player_decision_Exchange(cards, n):
-    return sample(cards, k=n)
+def get_block_challenger(action, alive_players):
+    block_challenger = choose_player_excluding(alive_players, action.blocking_player)
+    if block_challenger.controller.decide_challenge(action):
+        return block_challenger
+    else:
+        return None
 
 
-def get_player_decision_Reveal(influences):
-    return choice(influences)
+def get_challenger(action, alive_players):
+    challenger = choose_player_excluding(alive_players, action.executing_player)
+    if challenger.controller.decide_challenge(action):
+        return challenger
+    else:
+        return None
 
 
-def get_blocker(alive_players, executing_player):
-    return get_challenger(alive_players, executing_player)
+def choose_player_excluding(players, excluded_player):
+    options = set(players) - {excluded_player}
+    return choice(list(options))
 
 
-def get_block_challenger(alive_players, blocking_player):
-    return get_challenger(alive_players, blocking_player)
-
-
-def get_challenger(alive_players, executing_player):
-    challenger = get_player_decision_ActionTarget(alive_players, executing_player)
-    return challenger if coinflip() else None
-
-
-def get_player_decision_ActionTarget(alive_players, executing_player):
-    potential_adversaries = set(alive_players) - {executing_player}
-    return choice(list(potential_adversaries))
+def generate_id():
+    return str(uuid4())
 
 
 def coinflip():

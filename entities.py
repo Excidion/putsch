@@ -1,23 +1,43 @@
-from random import shuffle
+from random import shuffle, choice, sample
 from characters import Ambassador, Assassin, Captain, Contessa, Duke
-from utils import get_player_decision_Reveal
+from actions import Coup
+from utils import coinflip, generate_id
 import logging
 
 
 class Player:
-    def __init__(self, name=None, coins=2, influences=None):
+    def __init__(self, controller=None, name=None, coins=2, influences=None):
+        self.controller = controller
         self.name = name
-        self.influences = influences if isinstance(influences, list) else []
+        self.influences = influences or []
         self.coins = coins
+        if self.controller is not None:
+            self.controller.connect_player(self)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(name='{self.name}', coins={self.coins}, influences={self.influences})"
+        return f"{self.__class__.__name__}(controller={repr(self.controller)}, name='{self.name}', coins={self.coins}, influences={self.influences})"
 
     def __str__(self):
         if self.name is None:
             return f"An anonymous {self.__class__.__name__}"
         else:
             return f"{self.__class__.__name__} {self.name}"
+
+    def connect_controller(self, controller):
+        """
+        Sets the player's controller-attribute and makes sure, that the controller's player-attribute is matching.
+        The 'connect_player' method is exectued and mirros this behavior on the controller side.
+        The recursion is broken via AssertionError once both attributes are set.
+        If both attributes are matchingly set, the Error is not re-raised.
+        """
+        assert self.controller is None, f"{self} is connected to {self.controller}"
+        self.controller = controller
+        try:
+            controller.connect_player(self)
+        except AssertionError:  # either connection established or not possible
+            if controller.player is not self:  # not possible
+                self.controller = None  # reset player-side
+                raise
 
     def is_alive(self):
         return not all(i.revealed for i in self.influences)
@@ -40,9 +60,8 @@ class Player:
     def lose_influence(self):
         assert self.is_alive(), f"{self} has no influences left."
         logging.info(f"{self} loses 1 influence.")
-        character = get_player_decision_Reveal(self.get_unrevealed_influences())
-        i = self.influences.index(character)
-        self.influences[i].reveal()
+        character = self.controller.choose_reveal(self.get_unrevealed_influences())
+        character.reveal()
         if not self.is_alive():
             logging.info(f"{self} is out of the game.")
 
@@ -95,3 +114,73 @@ class Deck:
     def put_back(self, character):
         self.cards.append(character)
         self.shuffle()
+
+
+class BaseController:
+    def __init__(self):
+        self.id = generate_id()
+        self.player = None
+
+    def __str__(self):
+        return f"{self.__class__.__name__} {self.id}"
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}()"
+
+    def connect_player(self, player):
+        """
+        Sets the controller's player-attribute and makes sure, that the player's controller attribute is matching.
+        The 'connect_controller' method is exectued and mirros this behavior on the player side.
+        The recursion is broken via AssertionError once both attributes are set.
+        If both attributes are matchingly set, the Error is not re-raised.
+        """
+        assert self.player is None, f"{self} is connected to {self.player}"
+        self.player = player
+        try:
+            player.connect_controller(self)
+        except AssertionError:  # either connection established or not possible
+            if player.controller is not self:  # not possible
+                self.player = None  # reset controller-side
+                raise
+
+    def get_available_actions(self, action_types):
+        budget = self.player.coins
+        if budget < 10:
+            return [a for a in action_types if a.cost <= budget]
+        else:
+            return [Coup]
+
+
+class AIController_Random(BaseController):
+    def choose_action(self, action_types):
+        options = self.get_available_actions(action_types)
+        return choice(options)
+
+    def choose_target(self, players):
+        alive_players = [p for p in players if p.is_alive()]
+        competitors = list(set(alive_players) - {self.player})
+        return choice(competitors)
+
+    def choose_exchange(self, cards, n):
+        return sample(cards, n)
+
+    def choose_reveal(self, influences):
+        return choice(influences)
+
+    def decide_challenge(self, action):
+        return coinflip()
+
+    def decide_block(self, action):
+        return coinflip()
+
+    def decide_challenge_block(self, action):
+        return coinflip()
+
+
+def get_random_AI():
+    AIs = [AIController_Random]
+    return choice(AIs)()
+
+
+class HumanController(BaseController):
+    pass  # TODO communicate with some sort of UI

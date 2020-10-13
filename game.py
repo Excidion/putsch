@@ -1,13 +1,7 @@
-from entities import Player, Deck
+from entities import Player, Deck, get_random_AI
 from actions import Income, ForeignAid, Tax, Coup, Assassinate, Steal, Exchange
 from actions import BlockableAction, CharacterAction, InterAction
-from utils import (
-    get_player_decision_Action,
-    get_player_decision_ActionTarget,
-    get_challenger,
-    get_blocker,
-    get_block_challenger,
-)
+from utils import get_challenger, get_blocker, get_block_challenger
 import logging
 
 logging.basicConfig(
@@ -20,7 +14,7 @@ logging.basicConfig(
 
 def main(list_of_player_names):
     deck, players = setup_game(list_of_player_names)
-    actions = [Income, ForeignAid, Tax, Coup, Assassinate, Steal, Exchange]
+    action_types = [Income, ForeignAid, Tax, Coup, Assassinate, Steal, Exchange]
 
     # game loop
     while True:
@@ -31,14 +25,11 @@ def main(list_of_player_names):
             elif win_condition_met(players):
                 return
 
-            action_type = get_player_decision_Action(actions, player)
+            action_type = player.controller.choose_action(action_types)
             action_kwargs = {"executing_player": player, "deck": deck}
 
             if InterAction in action_type.mro():
-                target = get_player_decision_ActionTarget(
-                    alive_players=get_alive_players(players),
-                    executing_player=player,
-                )
+                target = player.controller.choose_target(players)
                 action_kwargs["target_player"] = target
 
             # init action object
@@ -47,8 +38,7 @@ def main(list_of_player_names):
             # eventual challenge of the action
             if isinstance(action, CharacterAction):
                 challenger = get_challenger(
-                    alive_players=get_alive_players(players),
-                    executing_player=player,
+                    action=action, alive_players=get_alive_players(players),
                 )
                 if challenger is not None:
                     if action.challenge(challenging_player=challenger):
@@ -60,15 +50,13 @@ def main(list_of_player_names):
             # eventual block of the action
             if isinstance(action, BlockableAction):
                 blocker = get_blocker(
-                    alive_players=get_alive_players(players),
-                    executing_player=player,
+                    action=action, alive_players=get_alive_players(players),
                 )
                 if not blocker is None:
                     action.block(blocking_player=blocker)
                     # eventual challenge of the block
                     block_challenger = get_block_challenger(
-                        alive_players=get_alive_players(players),
-                        blocking_player=blocker,
+                        action=action, alive_players=get_alive_players(players),
                     )
                     if block_challenger is not None:
                         if not action.challenge_block(
@@ -84,7 +72,9 @@ def main(list_of_player_names):
 
 def setup_game(list_of_player_names, multiplicity=3, initial_influences=2):
     deck = Deck(multiplicity=multiplicity)
-    players = [Player(name) for name in list_of_player_names]
+    players = []
+    for name in list_of_player_names:
+        players.append(Player(name=name, controller=get_random_AI()))
     for player in players:
         for card in deck.draw(initial_influences):
             player.add_card(card)

@@ -9,5 +9,6 @@ I created it to learn about object oriented programming.
 When running `python game.py` a round of 4 virtual Players will be played, making decisions at random (for now).
 
 ### Future Plans
-+ Replace the random decision functions in `utils.py` with a class to interact with some sort of UI, to enable real humans to play the game. (Ideas for UI include a Telegram Chatbot, pygame, tkinter, ...)
-+ Some sort of AI class to play against, whose decisions are not just random.
++ Interact with some sort of UI, to enable real humans to play the game. (Ideas for UI include a Telegram Chatbot, pygame, tkinter, ...)
++ AI class whose decisions are not just random.
++ Move logging to decorators for cleaner code (and to learn about decorators).
