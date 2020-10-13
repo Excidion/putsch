@@ -39,7 +39,7 @@ def main(list_of_player_names):
                     alive_players=get_alive_players(players),
                     executing_player=player,
                 )
-                action_kwargs["affected_player"] = target
+                action_kwargs["target_player"] = target
 
             # init action object
             action = action_type(**action_kwargs)

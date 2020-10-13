@@ -22,18 +22,18 @@ class BaseAction:
 
 
 class InterAction(BaseAction):
-    def __init__(self, *args, affected_player, **kwargs):
-        self.affected_player = affected_player
+    def __init__(self, *args, target_player, **kwargs):
+        self.target_player = target_player
         super().__init__(*args, **kwargs)
 
     def announce(self):
         logging.info(
-            f"{self.executing_player} wants to execute {self} on {self.affected_player}."
+            f"{self.executing_player} wants to execute {self} on {self.target_player}."
         )
 
     def announce_execute(self):
         logging.info(
-            f"{self.executing_player} executed {self} on {self.affected_player}."
+            f"{self.executing_player} executed {self} on {self.target_player}."
         )
 
 
@@ -63,7 +63,7 @@ class BlockableAction(BaseAction):
         self.blocking_player = blocking_player
         if isinstance(self, InterAction):
             logging.info(
-                f"{self.blocking_player} blocks {self.executing_player}'s attempt at {self} on {self.affected_player}."
+                f"{self.blocking_player} blocks {self.executing_player}'s attempt at {self} on {self.target_player}."
             )
 
         else:
@@ -115,7 +115,7 @@ class Coup(InterAction):
 
     def execute(self):
         super().announce_execute()
-        self.affected_player.lose_influence()
+        self.target_player.lose_influence()
 
 
 class Assassinate(InterAction, BlockableAction, CharacterAction):
@@ -124,10 +124,10 @@ class Assassinate(InterAction, BlockableAction, CharacterAction):
     def execute(self):
         try:
             self.announce_execute()
-            self.affected_player.lose_influence()
-        except AssertionError:  # If the action was unsuccessfully challenged, the affected_player might have no influences left at the time of execution.
+            self.target_player.lose_influence()
+        except AssertionError:  # If the action was unsuccessfully challenged, the target_player might have no influences left at the time of execution.
             logging.warning(
-                f"{self.executing_player}'s {self} could not be executed, since {self.affected_player} is already out of the game."
+                f"{self.executing_player}'s {self} could not be executed, since {self.target_player} is already out of the game."
             )
 
 
@@ -137,7 +137,7 @@ class Steal(InterAction, BlockableAction, CharacterAction):
         stolen_coins = 2
         while True:
             try:
-                self.affected_player.subtract_coins(stolen_coins)
+                self.target_player.subtract_coins(stolen_coins)
             except ValueError:  # player does not have enough coins
                 stolen_coins -= 1
                 continue  # try again
