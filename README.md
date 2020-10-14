@@ -10,5 +10,5 @@ When running `python game.py` a round of 4 virtual Players will be played, makin
 
 ### Future Plans
 + Interact with some sort of UI, to enable real humans to play the game. (Ideas for UI include a Telegram Chatbot, pygame, tkinter, ...)
-+ AI class whose decisions are not just random.
++ AI class whose decisions depend on the games state.
 + Move logging to decorators for cleaner code (and to learn about decorators).
