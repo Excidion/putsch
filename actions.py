@@ -16,7 +16,7 @@ class BaseAction:
     def announce(self):
         logging.info(f"{self.executing_player} wants to execute {self}.")
 
-    def announce_execute(self):
+    def execute(self):
         logging.info(f"{self.executing_player} executed {self}.")
 
 
@@ -30,7 +30,7 @@ class InterAction(BaseAction):
             f"{self.executing_player} wants to execute {self} on {self.target_player}."
         )
 
-    def announce_execute(self):
+    def execute(self):
         logging.info(
             f"{self.executing_player} executed {self} on {self.target_player}."
         )
@@ -49,6 +49,7 @@ class CharacterAction(BaseAction):
             self.executing_player.remove_card(character)
             self.deck.put_back(character)
             self.executing_player.add_card(self.deck.draw())
+            logging.info(f"{self.executing_player} replaces {character}.")
             self.challenging_player.lose_influence()
             return False
         else:
@@ -82,6 +83,7 @@ class BlockableAction(BaseAction):
             self.blocking_player.remove_card(character)
             self.deck.put_back(character)
             self.blocking_player.add_card(self.deck.draw())
+            logging.info(f"{self.blocking_player} replaces {character}.")
             self.block_challenging_player.lose_influence()
             return False
         else:
@@ -93,19 +95,19 @@ class BlockableAction(BaseAction):
 # From this line onwards the actually usable actions are defined
 class Income(BaseAction):
     def execute(self):
-        self.announce_execute()
+        super().execute()
         self.executing_player.add_coins(1)
 
 
 class ForeignAid(BlockableAction):
     def execute(self):
-        self.announce_execute()
+        super().execute()
         self.executing_player.add_coins(2)
 
 
 class Tax(CharacterAction):
     def execute(self):
-        self.announce_execute()
+        super().execute()
         self.executing_player.add_coins(3)
 
 
@@ -113,7 +115,7 @@ class Coup(InterAction):
     cost = 7
 
     def execute(self):
-        super().announce_execute()
+        super().execute()
         self.target_player.lose_influence()
 
 
@@ -121,8 +123,8 @@ class Assassinate(InterAction, BlockableAction, CharacterAction):
     cost = 3
 
     def execute(self):
+        super().execute()
         try:
-            self.announce_execute()
             self.target_player.lose_influence()
         except AssertionError:  # If the action was unsuccessfully challenged, the target_player might have no influences left at the time of execution.
             logging.warning(
@@ -132,7 +134,7 @@ class Assassinate(InterAction, BlockableAction, CharacterAction):
 
 class Steal(InterAction, BlockableAction, CharacterAction):
     def execute(self):
-        self.announce_execute()
+        super().execute()
         stolen_coins = 2
         while True:
             try:
@@ -146,7 +148,7 @@ class Steal(InterAction, BlockableAction, CharacterAction):
 
 class Exchange(CharacterAction):
     def execute(self):
-        self.announce_execute()
+        super().execute()
         original = self.executing_player.get_unrevealed_influences()
         drawn = self.deck.draw(2)
         options = original + drawn
