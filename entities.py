@@ -1,6 +1,6 @@
 from random import shuffle, choice, sample
 from characters import Ambassador, Assassin, Captain, Contessa, Duke
-from actions import Coup
+from actions import Coup, InterAction
 from utils import coinflip, generate_id
 import logging
 
@@ -122,7 +122,11 @@ class BaseController:
         self.player = None
 
     def __str__(self):
-        return f"{self.__class__.__name__} {self.id}"
+        name = self.__class__.__name__
+        if "AI" in name:
+            return f"{name.split('_')[1]} AI"
+        else:
+            return f"{name} {self.id}"
 
     def __repr__(self):
         return f"{self.__class__.__name__}()"
@@ -177,8 +181,104 @@ class AIController_Random(BaseController):
         return coinflip()
 
 
+class AIController_Defensive(AIController_Random):
+    def choose_action(self, action_types):
+        options = self.get_available_actions(action_types)
+        peaceful_options = [o for o in options if InterAction not in o.mro()]
+        if len(peaceful_options) > 0:
+            return choice(peaceful_options)
+        else:
+            return choice(options)
+
+    def decide_challenge(self, action):
+        return False
+
+    def decide_block(self, action):
+        if isinstance(action, InterAction):
+            return action.target_player is self.player
+        else:
+            return False
+
+    def decide_challenge_block(self, action):
+        return False
+
+
+class AIController_Offensive(AIController_Random):
+    def choose_action(self, action_types):
+        options = self.get_available_actions(action_types)
+        options = [o for o in options if InterAction in o.mro()]
+        return choice(options)
+
+    def decide_challenge(self, action):
+        if isinstance(action, InterAction):
+            return action.target_player is self.player
+        else:
+            return False
+
+    def decide_challenge_block(self, action):
+        return action.executing_player is self.player
+
+
+class AIController_Gullible(AIController_Random):
+    def decide_challenge(self, action):
+        return False
+
+    def decide_challenge_block(self, action):
+        return False
+
+
+class AIController_Skeptic(AIController_Random):
+    def decide_challenge(self, action):
+        return True
+
+    def decide_challenge_block(self, action):
+        return True
+
+
+class AIController_Opressor(AIController_Random):
+    def choose_target(self, players):
+        alive_players = [p for p in players if p.is_alive()]
+        competitors = list(set(alive_players) - {self.player})
+        targets = self.choose_weakest(competitors)
+        return choice(targets)
+
+    def choose_weakest(self, competitors):
+        min_i = min([len(c.get_unrevealed_influences()) for c in competitors])
+        targets = [
+            c for c in competitors if len(c.get_unrevealed_influences()) == min_i
+        ]
+        min_c = min([t.coins for t in targets])
+        targets = [t for t in targets if t.coins == min_c]
+        return targets
+
+
+class AIController_Revolutionary(AIController_Random):
+    def choose_target(self, players):
+        alive_players = [p for p in players if p.is_alive()]
+        competitors = list(set(alive_players) - {self.player})
+        targets = self.choose_strongest(competitors)
+        return choice(targets)
+
+    def choose_strongest(self, competitors):
+        max_i = max([len(c.get_unrevealed_influences()) for c in competitors])
+        targets = [
+            c for c in competitors if len(c.get_unrevealed_influences()) == max_i
+        ]
+        max_c = max([t.coins for t in targets])
+        targets = [t for t in targets if t.coins == max_c]
+        return targets
+
+
 def get_random_AI():
-    AIs = [AIController_Random]
+    AIs = [
+        AIController_Random,
+        AIController_Defensive,
+        AIController_Offensive,
+        AIController_Gullible,
+        AIController_Skeptic,
+        AIController_Opressor,
+        AIController_Revolutionary,
+    ]
     return choice(AIs)()
 
 
