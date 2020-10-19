@@ -81,7 +81,7 @@ class BlockableAction(BaseAction):
             logging.info(f"{self.blocking_player}'s block was not a bluff.")
             character.reveal()
             self.blocking_player.remove_card(character)
-            self.deck.put_back(character)
+            self.deck.put_back(type(character)())
             self.blocking_player.add_card(self.deck.draw())
             logging.info(f"{self.blocking_player} replaces {character}.")
             self.block_challenging_player.lose_influence()
