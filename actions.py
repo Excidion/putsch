@@ -47,7 +47,7 @@ class CharacterAction(BaseAction):
             logging.info(f"{self.executing_player}'s {self} was not a bluff.")
             character.reveal()
             self.executing_player.remove_card(character)
-            self.deck.put_back(character)
+            self.deck.put_back(type(character)())
             self.executing_player.add_card(self.deck.draw())
             logging.info(f"{self.executing_player} replaces {character}.")
             self.challenging_player.lose_influence()
