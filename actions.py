@@ -8,13 +8,10 @@ class BaseAction:
         self.executing_player = executing_player
         self.deck = deck
         self.executing_player.subtract_coins(self.cost)
-        self.announce()
+        logging.info(f"{self.executing_player} wants to execute {self}.")
 
     def __str__(self):
         return self.__class__.__name__
-
-    def announce(self):
-        logging.info(f"{self.executing_player} wants to execute {self}.")
 
     def execute(self):
         logging.info(f"{self.executing_player} executed {self}.")
@@ -25,15 +22,8 @@ class InterAction(BaseAction):
         self.target_player = target_player
         super().__init__(*args, **kwargs)
 
-    def announce(self):
-        logging.info(
-            f"{self.executing_player} wants to execute {self} on {self.target_player}."
-        )
-
-    def execute(self):
-        logging.info(
-            f"{self.executing_player} executed {self} on {self.target_player}."
-        )
+    def __str__(self):
+        return f"{self.__class__.__name__} on {self.target_player}"
 
 
 class CharacterAction(BaseAction):
@@ -61,15 +51,9 @@ class CharacterAction(BaseAction):
 class BlockableAction(BaseAction):
     def block(self, blocking_player):
         self.blocking_player = blocking_player
-        if isinstance(self, InterAction):
-            logging.info(
-                f"{self.blocking_player} blocks {self.executing_player}'s attempt at {self} on {self.target_player}."
-            )
-
-        else:
-            logging.info(
-                f"{self.blocking_player} blocks {self.executing_player}'s attempt at {self}."
-            )
+        logging.info(
+            f"{self.blocking_player} blocks {self.executing_player}'s attempt at {self}."
+        )
 
     def challenge_block(self, block_challenging_player):
         self.block_challenging_player = block_challenging_player
