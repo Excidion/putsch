@@ -8,13 +8,16 @@ class BaseAction:
         self.executing_player = executing_player
         self.deck = deck
         self.executing_player.subtract_coins(self.cost)
+        self.handled = False
         logging.info(f"{self.executing_player} wants to execute {self}.")
 
     def __str__(self):
         return self.__class__.__name__
 
     def execute(self):
+        assert not self.handled, f"{self} was already handled."
         logging.info(f"{self.executing_player} executed {self}.")
+        self.handled = True
 
 
 class InterAction(BaseAction):

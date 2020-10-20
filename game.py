@@ -86,7 +86,8 @@ class Game:
                 alive_players=self.get_alive_players(),
             )
             if challenger is not None:
-                if action.challenge(challenging_player=challenger):
+                if action.challenge(challenger):
+                    action.handled = True
                     return  # challenge succeeded, turn ends
 
         if self.win_condition_met():
@@ -99,18 +100,19 @@ class Game:
                 alive_players=self.get_alive_players(),
             )
             if not blocker is None:
-                action.block(blocking_player=blocker)
+                action.block(blocker)
+
                 # eventual challenge of the block
                 block_challenger = get_block_challenger(
                     action=action,
                     alive_players=self.get_alive_players(),
                 )
                 if block_challenger is not None:
-                    if not action.challenge_block(
-                        block_challenging_player=block_challenger
-                    ):
+                    if not action.challenge_block(block_challenger):
+                        action.handled = True
                         return  # challenge failed, blocking worked, turn ends
                 else:
+                    action.handled = True
                     return  # action blocked, turn ends
 
         # DO IT
