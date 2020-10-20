@@ -75,15 +75,17 @@ class Player:
         self.influences.remove(character)
 
     def challenge(self, action, block=False):
-        for character in self.get_unrevealed_influences():
-            if (
-                (type(action) in character.actions)
-                if not block
-                else (type(action) in character.blocks)
-            ):
-                return character  # character that can perform the action/block
-        else:
-            return None  # admit bluff
+        if isinstance(self.controller, HumanController):
+            return self.controller.choose_reveal(self.get_unrevealed_influences())
+        else:  # automaticly choose adequate character to reveal
+            for character in self.get_unrevealed_influences():
+                if block:
+                    if type(action) in character.blocks:
+                        return character  # character that can perform the block
+                elif type(action) in character.actions:
+                    return character  # character that can perform the action
+            else:
+                return None  # admit bluff
 
 
 class Deck:
@@ -283,4 +285,4 @@ def get_random_AI():
 
 
 class HumanController(BaseController):
-    pass  # TODO communicate with some sort of UI
+    pass
