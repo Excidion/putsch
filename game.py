@@ -51,7 +51,7 @@ class Game:
         return [p for p in self.players if p.is_alive()]
 
     def run(self):
-        while not self.win_condition_met():
+        while True:
             try:
                 self.run_round()
             except GameOver:
