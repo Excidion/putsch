@@ -4,13 +4,6 @@ from actions import BlockableAction, CharacterAction, InterAction
 from utils import get_challenger, get_blocker, get_block_challenger
 import logging
 
-logging.basicConfig(
-    filename="events.log",
-    level=logging.DEBUG,
-    format=r"%(asctime)s, %(levelname)s, %(message)s",
-    filemode="w",
-)
-
 
 class GameOver(BaseException):
     pass
@@ -125,6 +118,13 @@ class Game:
 
 
 def main(list_of_player_names):
+    logging.basicConfig(
+        filename="events.log",
+        level=logging.DEBUG,
+        format=r"%(asctime)s, %(levelname)s, %(message)s",
+        filemode="w",
+    )
+
     deck = Deck()
     players = [Player(get_random_AI(), name) for name in list_of_player_names]
     game = Game(players, deck)
