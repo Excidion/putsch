@@ -30,6 +30,8 @@ class Game:
         self.distribute_coins(starting_coins)
         # track game state
         self.actions = []
+        self.rounds_completed = 0
+        self.player_turn = 0
 
     def distribute_cards(self):
         for player in self.players:
@@ -59,13 +61,15 @@ class Game:
                 return
 
     def run_round(self):
-        for player in self.players:
+        for i, player in enumerate(self.players):
             if self.win_condition_met():
                 raise GameOver
             elif not player.is_alive():
                 continue
             else:
+                self.player_turn = i
                 self.run_turn(player)
+        self.rounds_completed += 1
 
     def run_turn(self, player):
         action_type = player.controller.choose_action(self.action_types)
