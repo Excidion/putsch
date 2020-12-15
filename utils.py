@@ -4,7 +4,7 @@ from uuid import uuid4
 
 def get_blocker(action, alive_players):
     blocker = choose_player_excluding(alive_players, action.executing_player)
-    if blocker.controller.decide_challenge(action):
+    if blocker.controller.decide_block(action):
         return blocker
     else:
         return None
@@ -12,7 +12,7 @@ def get_blocker(action, alive_players):
 
 def get_block_challenger(action, alive_players):
     block_challenger = choose_player_excluding(alive_players, action.blocking_player)
-    if block_challenger.controller.decide_challenge(action):
+    if block_challenger.controller.decide_challenge_block(action):
         return block_challenger
     else:
         return None
@@ -27,8 +27,12 @@ def get_challenger(action, alive_players):
 
 
 def choose_player_excluding(players, excluded_player):
-    options = set(players) - {excluded_player}
-    return choice(list(options))
+    options = get_relative_complement(players, excluded_player)
+    return choice(options)
+
+
+def get_relative_complement(complete_set, to_be_removed):
+    return list(set(complete_set) - {to_be_removed})
 
 
 def generate_id():
